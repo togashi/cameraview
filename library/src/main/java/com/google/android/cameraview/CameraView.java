@@ -345,6 +345,15 @@ public class CameraView extends FrameLayout {
     }
 
     /**
+     * Gets the view angles of camera, according to aspect ratio.
+     *
+     * @return The current {@link ViewAngles}. Can be {@code null} if no camera is opened yet.
+     */
+    public ViewAngles getViewAngles() {
+        return mImpl.getViewAngles();
+    }
+
+    /**
      * Enables or disables the continuous auto-focus mode. When the current camera doesn't support
      * auto-focus, calling this method will be ignored.
      *

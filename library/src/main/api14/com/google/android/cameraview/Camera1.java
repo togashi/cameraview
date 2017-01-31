@@ -57,6 +57,8 @@ class Camera1 extends CameraViewImpl {
 
     private AspectRatio mAspectRatio;
 
+    private ViewAngles mViewAngles;
+
     private boolean mShowingPreview;
 
     private boolean mAutoFocus;
@@ -154,6 +156,7 @@ class Camera1 extends CameraViewImpl {
         if (mAspectRatio == null || !isCameraOpened()) {
             // Handle this later when camera is opened
             mAspectRatio = ratio;
+            mViewAngles = null;
             return true;
         } else if (!mAspectRatio.equals(ratio)) {
             final Set<Size> sizes = mPreviewSizes.sizes(ratio);
@@ -161,6 +164,7 @@ class Camera1 extends CameraViewImpl {
                 throw new UnsupportedOperationException(ratio + " is not supported");
             } else {
                 mAspectRatio = ratio;
+                mViewAngles = null;
                 adjustCameraParameters();
                 return true;
             }
@@ -171,6 +175,20 @@ class Camera1 extends CameraViewImpl {
     @Override
     AspectRatio getAspectRatio() {
         return mAspectRatio;
+    }
+
+    @Override
+    ViewAngles getViewAngles() {
+        if (mViewAngles != null) {
+            return mViewAngles;
+        } else {
+            if (mCamera == null) {
+                return null;
+            }
+            Camera.Parameters params = mCamera.getParameters();
+            return mViewAngles = ViewAngles.fromRadians(params.getHorizontalViewAngle(),
+                    params.getVerticalViewAngle());
+        }
     }
 
     @Override

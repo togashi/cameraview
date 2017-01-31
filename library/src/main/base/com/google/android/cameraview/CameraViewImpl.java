@@ -57,6 +57,8 @@ abstract class CameraViewImpl {
 
     abstract AspectRatio getAspectRatio();
 
+    abstract ViewAngles getViewAngles();
+
     abstract void setAutoFocus(boolean autoFocus);
 
     abstract boolean getAutoFocus();

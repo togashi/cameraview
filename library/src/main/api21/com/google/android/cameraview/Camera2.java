@@ -19,6 +19,7 @@ package com.google.android.cameraview;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.ImageFormat;
+import android.graphics.Rect;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -32,6 +33,7 @@ import android.media.Image;
 import android.media.ImageReader;
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.util.SizeF;
 import android.util.SparseIntArray;
 import android.view.Surface;
 
@@ -179,6 +181,8 @@ class Camera2 extends CameraViewImpl {
 
     private AspectRatio mAspectRatio = Constants.DEFAULT_ASPECT_RATIO;
 
+    private ViewAngles mViewAngles;
+
     private boolean mAutoFocus;
 
     private int mFlash;
@@ -258,6 +262,7 @@ class Camera2 extends CameraViewImpl {
             return false;
         }
         mAspectRatio = ratio;
+        mViewAngles = null;
         if (mCaptureSession != null) {
             mCaptureSession.close();
             mCaptureSession = null;
@@ -269,6 +274,33 @@ class Camera2 extends CameraViewImpl {
     @Override
     AspectRatio getAspectRatio() {
         return mAspectRatio;
+    }
+
+    @Override
+    public ViewAngles getViewAngles() {
+        if (mViewAngles != null) {
+            return mViewAngles;
+        } else {
+            if (mCameraCharacteristics == null) {
+                return null;
+            }
+
+            final float[] focalLengths = mCameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+            final float focalLength = focalLengths[0] * 2;
+            final SizeF physicalSize = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE);
+            final android.util.Size pixelArraySize = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_PIXEL_ARRAY_SIZE);
+            final Rect activeArraySize = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+
+            final int outputHeight = activeArraySize.height();
+            final int outputWidth = outputHeight / mAspectRatio.getY() * mAspectRatio.getX();
+
+            final float horzSize = physicalSize.getWidth() * outputWidth / pixelArraySize.getWidth();
+            final float vertSize = physicalSize.getHeight() * outputHeight / pixelArraySize.getHeight();
+
+            final float horzViewAngle = (float) Math.atan(horzSize / focalLength) * 2;
+            final float vertViewAngle = (float) Math.atan(vertSize / focalLength) * 2;
+            return mViewAngles = ViewAngles.fromRadians(horzViewAngle, vertViewAngle);
+        }
     }
 
     @Override
